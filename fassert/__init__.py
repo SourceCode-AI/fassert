@@ -2,6 +2,8 @@ import inspect
 from abc import ABC, abstractmethod
 from typing import Pattern, Sequence, Literal
 
+__version__ = "0.2"
+
 
 class FuzzyAssert:
     def __init__(self):
@@ -18,7 +20,9 @@ class FuzzyAssert:
 
         :param data: Data to match against, extra data, container types or other python types is ignored
         :param template: Template to match against, everything defined here must have a match
+        :raises AssertionError: Raised when data does not match the given template
         :return: True if `template` matches the `data`
+        :rtype: Literal[True]
         """
         if inspect.isfunction(template):
             if self.eval_functions and template(data):
