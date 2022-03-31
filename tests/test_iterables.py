@@ -16,7 +16,7 @@ class IterablesTest(unittest.TestCase):
             ("a", "42", None),
             set(),
             {"a"},
-            {"a", 42, None}
+            {"a", 42, None},
         )
         for data in test_data:
             with self.subTest(data=data):

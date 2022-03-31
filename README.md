@@ -1,3 +1,7 @@
+[![PyPI version](https://badge.fury.io/py/fassert.svg)](https://badge.fury.io/py/fassert)
+![No dependencies](https://img.shields.io/badge/ZERO-Dependencies-blue)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+
 ^fassert$: Fuzzy assert
 ---------------------
 
@@ -38,7 +42,9 @@ try:
     fassert([1, 2, 3], [4])
     fassert("string", b"string")  # bytes != string in fassert
 except AssertionError:
-    pass  # All the examples within the try block above will raise this exception
+    pass
+else:
+    raise RuntimeError("All examples within the try block must raise the AssertionError")
 ```
 
 In fassert, you can define a template to match your data against.
@@ -90,3 +96,36 @@ Bellow is an overview of the configurable options and their default values
 | regex_allowed                 | True          | Enable matching regexes from template agains strings in the data                       |
 | fuzzy_sequence_types          | False         | Ignore types of similar sequence types when matching the template (e.g. tuple vs list) |
 | check_minimum_sequence_length | True          | Check that the data has a minimum length of greater or equal to the template           |
+
+
+You can also define custom data types such as following:
+
+```
+from fassert import fassert, FassertInterface, FuzzyAssert
+
+class IsNumberEvenOrEqual(FassertInterface):
+    def __init__(self, value):
+        self.value = value
+
+    def __fassert__(self, other: Any, matcher: FuzzyAssert, as_template: bool) -> Literal[True]:
+        if self.value == other:
+            return True
+        elif isinstance(other, (int, float)) and int(other) % 2 == 0:
+            return True
+        
+        raise AssertionError("Data does not match the template")
+
+
+# In these examples the parameter `as_template` would be set to True as the data type is used as a template for matching
+fassert(10, IsNumberEvenOrEqual(15))
+fassert(15, IsNumberEvenOrEqual(15))
+fassert(42.0, IsNumberEvenOrEqual(15))
+
+try:
+    fassert(15, IsNumberEvenOrEqual(17))
+    fassert("some_string", IsNumberEvenOrEqual(15))
+except AssertionError:
+    pass
+else:
+    raise RuntimeError("All examples within the try block must raise the AssertionError")
+```

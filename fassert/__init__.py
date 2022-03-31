@@ -1,8 +1,8 @@
 import inspect
 from abc import ABC, abstractmethod
-from typing import Pattern, Sequence, Literal
+from typing import Pattern, Sequence, Literal, Any
 
-__version__ = "0.2"
+__version__ = "0.3"
 
 
 class FuzzyAssert:
@@ -12,7 +12,7 @@ class FuzzyAssert:
         self.check_minimum_sequence_length = True
         self.fuzzy_sequence_types = False
 
-    def match(self, data, template) -> Literal[True]:
+    def match(self, data: Any, template: Any) -> Literal[True]:
         """
         Attempt to match the template onto the data.
         Each item in a `template` must have a match in the `data`.
@@ -24,7 +24,12 @@ class FuzzyAssert:
         :return: True if `template` matches the `data`
         :rtype: Literal[True]
         """
-        if inspect.isfunction(template):
+        if isinstance(template, FassertInterface):
+            return template.__fassert__(other=data, matcher=self, as_template=True)
+        elif isinstance(data, FassertInterface):
+            return data.__fassert__(other=template, matcher=self, as_template=False)
+
+        elif inspect.isfunction(template):
             if self.eval_functions and template(data):
                 return True
             raise AssertionError("Template function does not match the data")
@@ -41,8 +46,10 @@ class FuzzyAssert:
                 return True
             else:
                 raise AssertionError("Template does not match the data")
-        elif isinstance(data, Sequence) and isinstance(template, Sequence) and (
-                self.fuzzy_sequence_types or (type(data) == type(template))
+        elif (
+            isinstance(data, Sequence)
+            and isinstance(template, Sequence)
+            and (self.fuzzy_sequence_types or (type(data) == type(template)))
         ):
             if self.check_minimum_sequence_length and len(template) > len(data):
                 raise AssertionError(
@@ -69,7 +76,9 @@ class FuzzyAssert:
             return True
 
         if type(data) != type(template):
-            raise AssertionError(f"Template type `{type(template)}` does not match the type of data `{type(data)}`")
+            raise AssertionError(
+                f"Template type `{type(template)}` does not match the type of data `{type(data)}`"
+            )
         elif isinstance(data, dict):
             for template_key, template_value in template.items():
                 for data_key, data_value in data.items():
@@ -99,9 +108,21 @@ class FuzzyAssert:
 
 class FassertInterface(ABC):
     @abstractmethod
-    def __fassert__(self, other, matcher: FuzzyAssert) -> bool:
+    def __fassert__(
+        self, other: Any, matcher: FuzzyAssert, as_template: bool
+    ) -> Literal[True]:
+        """
+        Add a support for matching custom defined types in a recursive way
+
+        :param other: other data structure to match against
+        :param matcher: An instance of the FuzzyAssert object
+        :param as_template: Flag to indicate if you are (self) the template matching the data or the other way around
+        :raises AssertionError: When `self` does not match the `other`
+        :return: True if data is matching otherwise an AssertionError is raised
+        :rtype Literal[True]:
+        """
         ...
 
 
-def fassert(data, template) -> bool:
+def fassert(data: Any, template: Any) -> Literal[True]:
     return FuzzyAssert().match(data, template)

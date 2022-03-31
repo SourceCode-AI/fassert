@@ -44,7 +44,6 @@ class MatchingPrimitivesTest(unittest.TestCase):
             with self.subTest(data=data, template=template):
                 self.assertRaises(AssertionError, fassert, data, template)
 
-
     def test_different_types_not_matching(self):
         test_data = (
             ("", ()),

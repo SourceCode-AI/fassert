@@ -37,11 +37,10 @@ class ConfigurationTest(unittest.TestCase):
     def test_check_minimum_sequence_length(self):
         test_data = (
             ([""], ["", ""]),
-            (["test"], [re.compile(".{4}"), "test", re.compile("^test$")])
+            (["test"], [re.compile(".{4}"), "test", re.compile("^test$")]),
         )
 
         fasserter = FuzzyAssert()
-
 
         for data, template in test_data:
             with self.subTest(data=data, template=template):
@@ -51,13 +50,12 @@ class ConfigurationTest(unittest.TestCase):
                 fasserter.check_minimum_sequence_length = False
                 self.assertIs(fasserter.match(data, template), True)
 
-
     def test_regex_allowed(self):
         test_data = (
             ("", re.compile("")),
             ("test", re.compile("^test$")),
             ("test", re.compile("test")),
-            ("test", re.compile(".{4}"))
+            ("test", re.compile(".{4}")),
         )
 
         fasserter = FuzzyAssert()
